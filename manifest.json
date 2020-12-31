@@ -1,0 +1,41 @@
+{
+  "manifest_version": 1,
+  "id": "prometheus-bridge",
+  "name": "Prometheus",
+  "short_name": "Prometheus",
+  "version": "0.1.0",
+  "description": "Expose your devices to a prometheus server",
+  "homepage_url": "https://github.com/tim-hellhake/prometheus-bridge#readme",
+  "license": "MPL-2.0",
+  "author": "Tim Hellhake",
+  "gateway_specific_settings": {
+    "webthings": {
+      "exec": "{nodeLoader} {path}",
+      "strict_min_version": "1.0.0",
+      "strict_max_version": "*",
+      "primary_type": "adapter"
+    }
+  },
+  "options": {
+    "default": {
+      "port": 42337
+    },
+    "schema": {
+      "type": "object",
+      "required": [
+        "accessToken",
+        "port"
+      ],
+      "properties": {
+        "accessToken": {
+          "type": "string",
+          "title": "The access token for the gateway"
+        },
+        "port": {
+          "type": "integer",
+          "title": "The port of the webserver for the prometheus endpoint"
+        }
+      }
+    }
+  }
+}

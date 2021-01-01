@@ -9,6 +9,13 @@ import {WebThingsClient} from 'webthings-client';
 import {Config} from './config';
 import {createServer} from 'http';
 
+function sanitizeNames(s: string) {
+  return s
+    .split('')
+    .map((x) => x.replace(/[^a-zA-Z0-9:_]/, '_'))
+    .join('');
+}
+
 export class PrometheusBridge extends Adapter {
     private entries: Record<string, Record<string, unknown>> = {};
 
@@ -69,7 +76,7 @@ export class PrometheusBridge extends Adapter {
 
       webThingsClient.on('propertyChanged', async (deviceId, key, value) => {
         const device = this.entries[deviceId] ?? {};
-        device[key] = value;
+        device[sanitizeNames(key)] = value;
         this.entries[deviceId] = device;
       });
     }

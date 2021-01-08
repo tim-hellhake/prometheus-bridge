@@ -75,6 +75,10 @@ export class PrometheusBridge extends Adapter {
       await webThingsClient.connect();
 
       webThingsClient.on('propertyChanged', async (deviceId, key, value) => {
+        if (typeof value === 'boolean') {
+          value = value ? 1 : 0;
+        }
+
         if (typeof value === 'number') {
           const device = this.entries[deviceId] ?? {};
           device[sanitizeNames(key)] = value;

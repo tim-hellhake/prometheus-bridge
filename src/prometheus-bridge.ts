@@ -17,73 +17,73 @@ function sanitizeNames(s: string) {
 }
 
 export class PrometheusBridge extends Adapter {
-    private entries: Record<string, Record<string, unknown>> = {};
+  private entries: Record<string, Record<string, unknown>> = {};
 
-    constructor(
-      // eslint-disable-next-line no-unused-vars
-      addonManager: AddonManagerProxy, id: string, private config: Config) {
-      super(addonManager, PrometheusBridge.name, id);
-      addonManager.addAdapter(this);
-      this.connectToprometheus();
-    }
+  constructor(
+    // eslint-disable-next-line no-unused-vars
+    addonManager: AddonManagerProxy, id: string, private config: Config) {
+    super(addonManager, PrometheusBridge.name, id);
+    addonManager.addAdapter(this);
+    this.connectToprometheus();
+  }
 
-    private async connectToprometheus() {
-      const {
-        port,
-      } = this.config;
+  private async connectToprometheus() {
+    const {
+      port,
+    } = this.config;
 
-      this.connectToGateway();
+    this.connectToGateway();
 
-      const server = createServer((req, res) => {
-        if (req.method !== 'GET') {
-          res.writeHead(405);
-          res.end();
-          return;
+    const server = createServer((req, res) => {
+      if (req.method !== 'GET') {
+        res.writeHead(405);
+        res.end();
+        return;
+      }
+
+      if (req.url !== '/metrics') {
+        res.writeHead(404);
+        res.end();
+        return;
+      }
+
+      let response = '';
+
+      for (const [deviceId, properties] of Object.entries(this.entries)) {
+        for (const [property, value] of Object.entries(properties)) {
+          response += `${property}{deviceId="${deviceId}"} ${value}\n`;
         }
+      }
 
-        if (req.url !== '/metrics') {
-          res.writeHead(404);
-          res.end();
-          return;
-        }
+      res.writeHead(200);
+      res.end(response);
+    });
 
-        let response = '';
+    server.listen(port, () => {
+      console.log(`Http server ist listening on port ${port}`);
+    });
+  }
 
-        for (const [deviceId, properties] of Object.entries(this.entries)) {
-          for (const [property, value] of Object.entries(properties)) {
-            response += `${property}{deviceId="${deviceId}"} ${value}\n`;
-          }
-        }
+  private async connectToGateway() {
+    console.log('Connecting to gateway');
 
-        res.writeHead(200);
-        res.end(response);
-      });
+    const {
+      accessToken,
+    } = this.config;
 
-      server.listen(port, () => {
-        console.log(`Http server ist listening on port ${port}`);
-      });
-    }
+    const webThingsClient = await WebThingsClient.local(accessToken);
+    await webThingsClient.connect();
 
-    private async connectToGateway() {
-      console.log('Connecting to gateway');
+    webThingsClient.on('propertyChanged', async (deviceId, key, value) => {
+      if (typeof value === 'boolean') {
+        value = value ? 1 : 0;
+      }
 
-      const {
-        accessToken,
-      } = this.config;
-
-      const webThingsClient = await WebThingsClient.local(accessToken);
-      await webThingsClient.connect();
-
-      webThingsClient.on('propertyChanged', async (deviceId, key, value) => {
-        if (typeof value === 'boolean') {
-          value = value ? 1 : 0;
-        }
-
-        if (typeof value === 'number') {
-          const device = this.entries[deviceId] ?? {};
-          device[sanitizeNames(key)] = value;
-          this.entries[deviceId] = device;
-        }
-      });
-    }
+      if (typeof value === 'number') {
+        const device = this.entries[deviceId] ?? {};
+        device[sanitizeNames(key)] = value;
+        this.entries[deviceId] = device;
+      }
+    });
+  }
 }

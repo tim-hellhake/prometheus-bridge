@@ -69,12 +69,17 @@ export class PrometheusBridge extends Adapter {
 
     const {
       accessToken,
+      debug,
     } = this.config;
 
     const webThingsClient = await WebThingsClient.local(accessToken);
     await webThingsClient.connect();
 
     webThingsClient.on('propertyChanged', async (deviceId, key, value) => {
+      if (debug) {
+        console.debug(`Received ${deviceId}/${key} => ${value}`);
+      }
+
       if (typeof value === 'boolean') {
         value = value ? 1 : 0;
       }
@@ -83,6 +88,9 @@ export class PrometheusBridge extends Adapter {
         const device = this.entries[deviceId] ?? {};
         device[sanitizeNames(key)] = value;
         this.entries[deviceId] = device;
+      } else if (debug) {
+        // eslint-disable-next-line max-len
+        console.debug(`Ignoring ${deviceId}/${key} because the type is ${typeof value}`);
       }
     });
   }

@@ -30,11 +30,17 @@ export class PrometheusBridge extends Adapter {
   private async connectToprometheus() {
     const {
       port,
+      debug,
     } = this.config;
 
     this.connectToGateway();
 
     const server = createServer((req, res) => {
+      if (debug) {
+        // eslint-disable-next-line max-len
+        console.debug(`Incoming request on ${req.url} from ${req.socket.remoteAddress}`);
+      }
+
       if (req.method !== 'GET') {
         res.writeHead(405);
         res.end();

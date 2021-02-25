@@ -66,12 +66,12 @@ export class PrometheusBridge extends Adapter {
     });
 
     server.listen(port, () => {
-      console.log(`Http server ist listening on port ${port}`);
+      console.debug(`Http server ist listening on port ${port}`);
     });
   }
 
   private async connectToGateway() {
-    console.log('Connecting to gateway');
+    console.debug('Connecting to gateway');
 
     const {
       accessToken,

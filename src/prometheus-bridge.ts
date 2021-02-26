@@ -79,7 +79,6 @@ export class PrometheusBridge extends Adapter {
     } = this.config;
 
     const webThingsClient = await WebThingsClient.local(accessToken);
-    await webThingsClient.connect();
 
     webThingsClient.on('propertyChanged', async (deviceId, key, value) => {
       if (debug) {
@@ -99,5 +98,7 @@ export class PrometheusBridge extends Adapter {
         console.debug(`Ignoring ${deviceId}/${key} because the type is ${typeof value}`);
       }
     });
+
+    await webThingsClient.connect();
   }
 }

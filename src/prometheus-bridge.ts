@@ -21,10 +21,20 @@ export class PrometheusBridge extends Adapter {
 
   constructor(
     // eslint-disable-next-line no-unused-vars
-    addonManager: AddonManagerProxy, id: string, private config: Config) {
+    addonManager: AddonManagerProxy, id: string, private config: Config,
+    // eslint-disable-next-line no-unused-vars
+    private errorCallback: (error: string) => void) {
     super(addonManager, PrometheusBridge.name, id);
     addonManager.addAdapter(this);
-    this.connectToprometheus();
+    this.init();
+  }
+
+  private async init() {
+    try {
+      await this.connectToprometheus();
+    } catch (e) {
+      this.errorCallback(`${e}`);
+    }
   }
 
   private async connectToprometheus() {

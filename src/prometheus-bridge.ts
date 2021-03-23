@@ -31,13 +31,13 @@ export class PrometheusBridge extends Adapter {
 
   private async init() {
     try {
-      await this.connectToprometheus();
+      await this.connectToPrometheus();
     } catch (e) {
       this.errorCallback(`${e}`);
     }
   }
 
-  private async connectToprometheus() {
+  private async connectToPrometheus() {
     const {
       port,
       debug,

@@ -43,7 +43,7 @@ export class PrometheusBridge extends Adapter {
       debug,
     } = this.config;
 
-    this.connectToGateway();
+    await this.connectToGateway();
 
     const server = createServer((req, res) => {
       if (debug) {

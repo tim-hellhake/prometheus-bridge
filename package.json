@@ -8,6 +8,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "lint": "eslint src",
+    "prettier": "npx prettier -w '*.js' 'src/*.ts'",
     "build": "node generate-config-interfaces.js && tsc -p ."
   },
   "repository": {
@@ -37,8 +38,10 @@
     "@typescript-eslint/eslint-plugin": "^4.12.0",
     "@typescript-eslint/parser": "^4.12.0",
     "eslint": "^7.17.0",
+    "eslint-config-prettier": "^8.1.0",
     "gateway-addon": "^1.0.0",
     "json-schema-to-typescript": "^10.1.2",
+    "prettier": "^2.2.1",
     "typescript": "^4.1.3"
   }
 }

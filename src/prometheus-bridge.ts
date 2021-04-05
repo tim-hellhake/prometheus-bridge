@@ -4,10 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.*
  */
 
-import {Adapter, AddonManagerProxy} from 'gateway-addon';
-import {WebThingsClient} from 'webthings-client';
-import {Config} from './config';
-import {createServer} from 'http';
+import { Adapter, AddonManagerProxy } from 'gateway-addon';
+import { WebThingsClient } from 'webthings-client';
+import { Config } from './config';
+import { createServer } from 'http';
 
 function sanitizeNames(s: string) {
   return s
@@ -21,9 +21,12 @@ export class PrometheusBridge extends Adapter {
 
   constructor(
     // eslint-disable-next-line no-unused-vars
-    addonManager: AddonManagerProxy, id: string, private config: Config,
+    addonManager: AddonManagerProxy,
+    id: string,
+    private config: Config,
     // eslint-disable-next-line no-unused-vars
-    private errorCallback: (error: string) => void) {
+    private errorCallback: (error: string) => void
+  ) {
     super(addonManager, PrometheusBridge.name, id);
     addonManager.addAdapter(this);
     this.init();
@@ -38,10 +41,7 @@ export class PrometheusBridge extends Adapter {
   }
 
   private async connectToPrometheus() {
-    const {
-      port,
-      debug,
-    } = this.config;
+    const { port, debug } = this.config;
 
     await this.connectToGateway();
 
@@ -83,10 +83,7 @@ export class PrometheusBridge extends Adapter {
   private async connectToGateway() {
     console.debug('Connecting to gateway');
 
-    const {
-      accessToken,
-      debug,
-    } = this.config;
+    const { accessToken, debug } = this.config;
 
     const webThingsClient = await WebThingsClient.local(accessToken);
 

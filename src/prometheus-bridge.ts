@@ -5,9 +5,10 @@
  */
 
 import { Adapter, AddonManagerProxy } from 'gateway-addon';
-import { WebThingsClient } from 'webthings-client';
+import { WebThingsClient, Property } from 'webthings-client';
 import { Config } from './config';
 import { createServer } from 'http';
+import { Any } from 'gateway-addon/lib/schema';
 
 function sanitizeNames(s: string) {
   return s
@@ -86,26 +87,34 @@ export class PrometheusBridge extends Adapter {
     const { accessToken, debug } = this.config;
 
     const webThingsClient = await WebThingsClient.local(accessToken);
+    const devices = await webThingsClient.getDevices();
 
-    webThingsClient.on('propertyChanged', async (deviceId, key, value) => {
-      if (debug) {
-        console.debug(`Received ${deviceId}/${key} => ${value}`);
-      }
+    for (const device of devices) {
+      const deviceId = device.id();
 
-      if (typeof value === 'boolean') {
-        value = value ? 1 : 0;
-      }
+      device.on('propertyChanged', async (property: Property, value: Any) => {
+        const key = property.name;
 
-      if (typeof value === 'number') {
-        const device = this.entries[deviceId] ?? {};
-        device[sanitizeNames(key)] = value;
-        this.entries[deviceId] = device;
-      } else if (debug) {
-        // eslint-disable-next-line max-len
-        console.debug(`Ignoring ${deviceId}/${key} because the type is ${typeof value}`);
-      }
-    });
+        if (debug) {
+          console.debug(`Received ${deviceId}/${key} => ${value}`);
+        }
 
-    await webThingsClient.connect();
+        if (typeof value === 'boolean') {
+          value = value ? 1 : 0;
+        }
+
+        if (typeof value === 'number') {
+          const device = this.entries[deviceId] ?? {};
+          device[sanitizeNames(key)] = value;
+          this.entries[deviceId] = device;
+        } else if (debug) {
+          // eslint-disable-next-line max-len
+          console.debug(`Ignoring ${deviceId}/${key} because the type is ${typeof value}`);
+        }
+      });
+
+      console.debug(`Connecting to ${deviceId}`);
+      await device.connect();
+    }
   }
 }

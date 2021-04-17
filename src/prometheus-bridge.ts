@@ -17,10 +17,18 @@ function sanitizeNames(s: string) {
     .join('');
 }
 
-export class PrometheusBridge extends Adapter {
-  private entries: Record<string, Record<string, unknown>> = {};
+interface DeviceEntry {
+  title: string;
+  properties: Record<string, PropertyEntry>;
+}
 
-  private lastUpdate: Record<string, Record<string, Date>> = {};
+interface PropertyEntry {
+  lastUpdate: Date;
+  value: unknown;
+}
+
+export class PrometheusBridge extends Adapter {
+  private entries: Record<string, DeviceEntry> = {};
 
   constructor(
     // eslint-disable-next-line no-unused-vars
@@ -68,14 +76,12 @@ export class PrometheusBridge extends Adapter {
 
       let response = '';
 
-      for (const [deviceId, properties] of Object.entries(this.entries)) {
-        const lastUpdates = this.lastUpdate[deviceId];
-
-        for (const [property, value] of Object.entries(properties)) {
-          response += `${property}{deviceId="${deviceId}"} ${value}\n`;
-          const lastUpdate = lastUpdates[property];
+      for (const [deviceId, { title, properties }] of Object.entries(this.entries)) {
+        for (const [property, { value, lastUpdate }] of Object.entries(properties)) {
+          response += `${property}{deviceId="${deviceId}", deviceTitle="${title}"} ${value}\n`;
           const diff = (new Date().getTime() - lastUpdate.getTime()) / 1000;
-          response += `last_update{deviceId="${deviceId}",property="${property}"} ${diff}\n`;
+          // eslint-disable-next-line max-len
+          response += `last_update{deviceId="${deviceId}", deviceTitle="${title}", property="${property}"} ${diff}\n`;
         }
       }
 
@@ -111,12 +117,16 @@ export class PrometheusBridge extends Adapter {
         }
 
         if (typeof value === 'number') {
-          const device = this.entries[deviceId] ?? {};
-          device[sanitizeNames(key)] = value;
-          this.entries[deviceId] = device;
-          const lastUpdates = this.lastUpdate[deviceId] ?? {};
-          lastUpdates[sanitizeNames(key)] = new Date();
-          this.lastUpdate[deviceId] = lastUpdates;
+          const { title } = device.description;
+          const deviceEntry = this.entries[deviceId] ?? {
+            title,
+            properties: {},
+          };
+          deviceEntry.properties[sanitizeNames(key)] = {
+            value,
+            lastUpdate: new Date(),
+          };
+          this.entries[deviceId] = deviceEntry;
         } else if (debug) {
           // eslint-disable-next-line max-len
           console.debug(`Ignoring ${deviceId}/${key} because the type is ${typeof value}`);

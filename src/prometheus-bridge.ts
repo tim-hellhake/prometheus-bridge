@@ -20,6 +20,8 @@ function sanitizeNames(s: string) {
 export class PrometheusBridge extends Adapter {
   private entries: Record<string, Record<string, unknown>> = {};
 
+  private lastUpdate: Record<string, Record<string, Date>> = {};
+
   constructor(
     // eslint-disable-next-line no-unused-vars
     addonManager: AddonManagerProxy,
@@ -67,8 +69,13 @@ export class PrometheusBridge extends Adapter {
       let response = '';
 
       for (const [deviceId, properties] of Object.entries(this.entries)) {
+        const lastUpdates = this.lastUpdate[deviceId];
+
         for (const [property, value] of Object.entries(properties)) {
           response += `${property}{deviceId="${deviceId}"} ${value}\n`;
+          const lastUpdate = lastUpdates[property];
+          const diff = (new Date().getTime() - lastUpdate.getTime()) / 1000;
+          response += `last_update{deviceId="${deviceId}",property="${property}"} ${diff}\n`;
         }
       }
 
@@ -107,6 +114,9 @@ export class PrometheusBridge extends Adapter {
           const device = this.entries[deviceId] ?? {};
           device[sanitizeNames(key)] = value;
           this.entries[deviceId] = device;
+          const lastUpdates = this.lastUpdate[deviceId] ?? {};
+          lastUpdates[sanitizeNames(key)] = new Date();
+          this.lastUpdate[deviceId] = lastUpdates;
         } else if (debug) {
           // eslint-disable-next-line max-len
           console.debug(`Ignoring ${deviceId}/${key} because the type is ${typeof value}`);

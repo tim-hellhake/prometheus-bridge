@@ -19,6 +19,7 @@ function sanitizeNames(s: string) {
 
 interface DeviceEntry {
   title: string;
+  lastUpdate: Date;
   properties: Record<string, PropertyEntry>;
 }
 
@@ -76,12 +77,17 @@ export class PrometheusBridge extends Adapter {
 
       let response = '';
 
-      for (const [deviceId, { title, properties }] of Object.entries(this.entries)) {
+      for (const [deviceId, { title, lastUpdate, properties }] of Object.entries(this.entries)) {
+        const diff = (new Date().getTime() - lastUpdate.getTime()) / 1000;
+        // eslint-disable-next-line max-len
+        response += `last_device_update{deviceId="${deviceId}", deviceTitle="${title}"} ${diff}\n`;
+
         for (const [property, { value, lastUpdate }] of Object.entries(properties)) {
           response += `${property}{deviceId="${deviceId}", deviceTitle="${title}"} ${value}\n`;
+
           const diff = (new Date().getTime() - lastUpdate.getTime()) / 1000;
           // eslint-disable-next-line max-len
-          response += `last_update{deviceId="${deviceId}", deviceTitle="${title}", property="${property}"} ${diff}\n`;
+          response += `last_property_update{deviceId="${deviceId}", deviceTitle="${title}", property="${property}"} ${diff}\n`;
         }
       }
 
@@ -122,10 +128,14 @@ export class PrometheusBridge extends Adapter {
             title,
             properties: {},
           };
+
+          deviceEntry.lastUpdate = new Date();
+
           deviceEntry.properties[sanitizeNames(key)] = {
             value,
             lastUpdate: new Date(),
           };
+
           this.entries[deviceId] = deviceEntry;
         } else if (debug) {
           // eslint-disable-next-line max-len

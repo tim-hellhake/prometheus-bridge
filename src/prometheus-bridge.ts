@@ -109,42 +109,46 @@ export class PrometheusBridge extends Adapter {
     const devices = await webThingsClient.getDevices();
 
     for (const device of devices) {
-      const deviceId = device.id();
+      try {
+        const deviceId = device.id();
 
-      device.on('propertyChanged', async (property: Property, value: Any) => {
-        const key = property.name;
+        device.on('propertyChanged', async (property: Property, value: Any) => {
+          const key = property.name;
 
-        if (debug) {
-          console.debug(`Received ${deviceId}/${key} => ${value}`);
-        }
+          if (debug) {
+            console.debug(`Received ${deviceId}/${key} => ${value}`);
+          }
 
-        if (typeof value === 'boolean') {
-          value = value ? 1 : 0;
-        }
+          if (typeof value === 'boolean') {
+            value = value ? 1 : 0;
+          }
 
-        if (typeof value === 'number') {
-          const { title } = device.description;
-          const deviceEntry = this.entries[deviceId] ?? {
-            title,
-            properties: {},
-          };
+          if (typeof value === 'number') {
+            const { title } = device.description;
+            const deviceEntry = this.entries[deviceId] ?? {
+              title,
+              properties: {},
+            };
 
-          deviceEntry.lastUpdate = new Date();
+            deviceEntry.lastUpdate = new Date();
 
-          deviceEntry.properties[sanitizeNames(key)] = {
-            value,
-            lastUpdate: new Date(),
-          };
+            deviceEntry.properties[sanitizeNames(key)] = {
+              value,
+              lastUpdate: new Date(),
+            };
 
-          this.entries[deviceId] = deviceEntry;
-        } else if (debug) {
-          // eslint-disable-next-line max-len
-          console.debug(`Ignoring ${deviceId}/${key} because the type is ${typeof value}`);
-        }
-      });
+            this.entries[deviceId] = deviceEntry;
+          } else if (debug) {
+            // eslint-disable-next-line max-len
+            console.debug(`Ignoring ${deviceId}/${key} because the type is ${typeof value}`);
+          }
+        });
 
-      console.debug(`Connecting to ${deviceId}`);
-      await device.connect();
+        console.debug(`Connecting to ${deviceId}`);
+        await device.connect();
+      } catch (e) {
+        console.log(`Could not connect to ${device}: ${e}`);
+      }
     }
   }
 }

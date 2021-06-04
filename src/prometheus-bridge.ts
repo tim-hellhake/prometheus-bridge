@@ -80,12 +80,15 @@ export class PrometheusBridge extends Adapter {
       for (const [deviceId, { title, lastUpdate, properties }] of Object.entries(this.entries)) {
         const diff = (new Date().getTime() - lastUpdate.getTime()) / 1000;
         // eslint-disable-next-line max-len
+        response += '# TYPE last_device_update gauge';
         response += `last_device_update{deviceId="${deviceId}", deviceTitle="${title}"} ${diff}\n`;
 
         for (const [property, { value, lastUpdate }] of Object.entries(properties)) {
+          response += `# TYPE ${property} gauge`;
           response += `${property}{deviceId="${deviceId}", deviceTitle="${title}"} ${value}\n`;
 
           const diff = (new Date().getTime() - lastUpdate.getTime()) / 1000;
+          response += '# TYPE last_property_update gauge';
           // eslint-disable-next-line max-len
           response += `last_property_update{deviceId="${deviceId}", deviceTitle="${title}", property="${property}"} ${diff}\n`;
         }

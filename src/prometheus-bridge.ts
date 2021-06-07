@@ -85,6 +85,8 @@ export class PrometheusBridge extends Adapter {
         response += `last_device_update{deviceId="${deviceId}", deviceTitle="${title}"} ${diff}\n`;
 
         for (const [property, { value, lastUpdate }] of Object.entries(properties)) {
+          // eslint-disable-next-line max-len
+          response += `# HELP ${property} ${property} property of the device ${title} (${deviceId})`;
           response += `# TYPE ${property} gauge`;
           response += `${property}{deviceId="${deviceId}", deviceTitle="${title}"} ${value}\n`;
 

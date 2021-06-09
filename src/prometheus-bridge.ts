@@ -31,6 +31,8 @@ interface PropertyEntry {
 export class PrometheusBridge extends Adapter {
   private entries: Record<string, DeviceEntry> = {};
 
+  private connectedDevices: string[] = [];
+
   constructor(
     // eslint-disable-next-line no-unused-vars
     addonManager: AddonManagerProxy,
@@ -119,43 +121,50 @@ export class PrometheusBridge extends Adapter {
       try {
         const deviceId = device.id();
 
-        device.on('propertyChanged', async (property: Property, value: Any) => {
-          const key = property.name;
+        if (this.connectedDevices.indexOf(deviceId) === -1) {
+          device.on('propertyChanged', async (property: Property, value: Any) => {
+            const key = property.name;
 
-          if (debug) {
-            console.debug(`Received ${deviceId}/${key} => ${value}`);
-          }
+            if (debug) {
+              console.debug(`Received ${deviceId}/${key} => ${value}`);
+            }
 
-          if (typeof value === 'boolean') {
-            value = value ? 1 : 0;
-          }
+            if (typeof value === 'boolean') {
+              value = value ? 1 : 0;
+            }
 
-          if (typeof value === 'number') {
-            const { title } = device.description;
-            const deviceEntry = this.entries[deviceId] ?? {
-              title,
-              properties: {},
-            };
+            if (typeof value === 'number') {
+              const { title } = device.description;
+              const deviceEntry = this.entries[deviceId] ?? {
+                title,
+                properties: {},
+              };
 
-            deviceEntry.lastUpdate = new Date();
+              deviceEntry.lastUpdate = new Date();
 
-            deviceEntry.properties[sanitizeNames(key)] = {
-              value,
-              lastUpdate: new Date(),
-            };
+              deviceEntry.properties[sanitizeNames(key)] = {
+                value,
+                lastUpdate: new Date(),
+              };
 
-            this.entries[deviceId] = deviceEntry;
-          } else if (debug) {
-            // eslint-disable-next-line max-len
-            console.debug(`Ignoring ${deviceId}/${key} because the type is ${typeof value}`);
-          }
-        });
+              this.entries[deviceId] = deviceEntry;
+            } else if (debug) {
+              // eslint-disable-next-line max-len
+              console.debug(`Ignoring ${deviceId}/${key} because the type is ${typeof value}`);
+            }
+          });
 
-        console.debug(`Connecting to ${deviceId}`);
-        await device.connect();
+          console.debug(`Connecting to ${deviceId}`);
+          await device.connect();
+          this.connectedDevices.push(deviceId);
+        }
       } catch (e) {
         console.log(`Could not connect to ${device}: ${e}`);
       }
     }
+
+    setTimeout(() => {
+      this.connectToGateway();
+    }, 10000);
   }
 }

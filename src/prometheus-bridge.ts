@@ -164,7 +164,11 @@ export class PrometheusBridge extends Adapter {
     }
 
     setTimeout(() => {
-      this.connectToGateway();
+      try {
+        this.connectToGateway();
+      } catch (e) {
+        console.log(`Could not connect to gateway: ${e}`);
+      }
     }, 10000);
   }
 }

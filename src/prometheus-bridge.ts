@@ -112,7 +112,7 @@ export class PrometheusBridge extends Adapter {
   private async connectToGateway() {
     console.debug('Connecting to gateway');
 
-    const { accessToken, debug } = this.config;
+    const { accessToken, deviceSearchInterval, debug } = this.config;
 
     const webThingsClient = await WebThingsClient.local(accessToken);
     const devices = await webThingsClient.getDevices();
@@ -169,6 +169,6 @@ export class PrometheusBridge extends Adapter {
       } catch (e) {
         console.log(`Could not connect to gateway: ${e}`);
       }
-    }, 10000);
+    }, (deviceSearchInterval ?? 10) * 1000);
   }
 }

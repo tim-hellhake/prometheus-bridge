@@ -18,7 +18,8 @@
   },
   "options": {
     "default": {
-      "port": 42337
+      "port": 42337,
+      "deviceSearchInterval": 10
     },
     "schema": {
       "type": "object",
@@ -34,6 +35,10 @@
         "port": {
           "type": "integer",
           "title": "The port of the webserver for the prometheus endpoint"
+        },
+        "deviceSearchInterval": {
+          "type": "integer",
+          "title": "The number of seconds to wait before searching again for new devices"
         },
         "debug": {
           "type": "boolean",

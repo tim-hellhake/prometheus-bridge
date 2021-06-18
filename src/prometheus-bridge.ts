@@ -82,10 +82,16 @@ export class PrometheusBridge extends Adapter {
       const customLabelsObject: Record<string, unknown> = {};
 
       for (const customLabel of customLabels ?? []) {
-        const { key, value } = customLabel;
+        let key = customLabel.key;
+        let value = customLabel.value;
 
         if (typeof key == 'string' && typeof value === 'string') {
-          customLabelsObject[key] = value;
+          key = key.trim();
+          value = value.trim();
+
+          if (key.length > 0 && value.length > 0) {
+            customLabelsObject[key] = value;
+          }
         }
       }
 

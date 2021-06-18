@@ -43,6 +43,24 @@
         "debug": {
           "type": "boolean",
           "title": "Enable debug logs"
+        },
+        "customLabels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "key",
+              "value"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            }
+          }
         }
       }
     }

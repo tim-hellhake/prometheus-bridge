@@ -55,7 +55,7 @@ export class PrometheusBridge extends Adapter {
   }
 
   private async connectToPrometheus() {
-    const { port, debug } = this.config;
+    const { port, debug, customLabels } = this.config;
 
     await this.connectToGateway();
 
@@ -79,8 +79,18 @@ export class PrometheusBridge extends Adapter {
 
       let response = '';
 
+      const customLabelsObject: Record<string, unknown> = {};
+
+      for (const customLabel of customLabels ?? []) {
+        const { key, value } = customLabel;
+
+        if (typeof key == 'string' && typeof value === 'string') {
+          customLabelsObject[key] = value;
+        }
+      }
+
       for (const [deviceId, { title, lastUpdate, properties }] of Object.entries(this.entries)) {
-        const labels = { deviceId, deviceTitle: title };
+        const labels = { ...customLabelsObject, deviceId, deviceTitle: title };
         const diff = (new Date().getTime() - lastUpdate.getTime()) / 1000;
         // eslint-disable-next-line max-len
         response += '# HELP last_device_update Time since the last update of the device\n';

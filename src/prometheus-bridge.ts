@@ -86,7 +86,7 @@ export class PrometheusBridge extends Adapter {
         let value = customLabel.value;
 
         if (typeof key == 'string' && typeof value === 'string') {
-          key = key.trim();
+          key = sanitizeNames(key.trim());
           value = value.trim();
 
           if (key.length > 0 && value.length > 0) {

@@ -86,7 +86,7 @@ export class PrometheusBridge extends Adapter {
         let value = customLabel.value;
 
         if (typeof key == 'string' && typeof value === 'string') {
-          key = sanitizeNames(key.trim());
+          key = key.trim();
           value = value.trim();
 
           if (key.length > 0 && value.length > 0) {
@@ -134,7 +134,7 @@ export class PrometheusBridge extends Adapter {
     labels: Record<string, unknown> = {}
   ): string {
     const pairs = Object.entries(labels)
-      .map(([key, value]) => `${key}="${value}"`)
+      .map(([key, value]) => `${sanitizeNames(key)}="${value}"`)
       .join(', ');
 
     return `${name}{${pairs}} ${value}`;

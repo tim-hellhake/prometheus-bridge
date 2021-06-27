@@ -25,6 +25,7 @@ interface DeviceEntry {
 
 interface PropertyEntry {
   lastUpdate: Date;
+  type?: string;
   value: unknown;
 }
 
@@ -103,11 +104,20 @@ export class PrometheusBridge extends Adapter {
         response += '# TYPE last_device_update gauge\n';
         response += `${this.prometheusFormat('last_device_update', diff, labels)}\n`;
 
-        for (const [property, { value, lastUpdate }] of Object.entries(properties)) {
+        for (const [property, { value, type, lastUpdate }] of Object.entries(properties)) {
+          const additionalLabels: Record<string, string> = {};
+
+          if (typeof type === 'string') {
+            additionalLabels.type = type;
+          }
+
           // eslint-disable-next-line max-len
           response += `# HELP ${property} ${property} property of the device ${title} (${deviceId})\n`;
           response += `# TYPE ${property} gauge\n`;
-          response += `${this.prometheusFormat(property, value, labels)}\n`;
+          response += `${this.prometheusFormat(property, value, {
+            ...labels,
+            ...additionalLabels,
+          })}\n`;
 
           const diff = (new Date().getTime() - lastUpdate.getTime()) / 1000;
           response += '# HELP last_property_update Time since the last update of the property\n';
@@ -175,6 +185,7 @@ export class PrometheusBridge extends Adapter {
 
               deviceEntry.properties[sanitizeNames(key)] = {
                 value,
+                type: property.description['@type'] as unknown as string,
                 lastUpdate: new Date(),
               };
 

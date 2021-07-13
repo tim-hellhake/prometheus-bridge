@@ -19,13 +19,15 @@
   "options": {
     "default": {
       "port": 42337,
-      "deviceSearchInterval": 10
+      "deviceSearchInterval": 10,
+      "lastUpdateMetric": true
     },
     "schema": {
       "type": "object",
       "required": [
         "accessToken",
-        "port"
+        "port",
+        "lastUpdateMetric"
       ],
       "properties": {
         "accessToken": {
@@ -39,6 +41,10 @@
         "deviceSearchInterval": {
           "type": "integer",
           "title": "The number of seconds to wait before searching again for new devices"
+        },
+        "lastUpdateMetric": {
+          "type": "boolean",
+          "title": "Activate the 'last update' metrics"
         },
         "debug": {
           "type": "boolean",

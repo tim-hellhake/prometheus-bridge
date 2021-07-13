@@ -56,7 +56,7 @@ export class PrometheusBridge extends Adapter {
   }
 
   private async connectToPrometheus() {
-    const { port, debug, customLabels } = this.config;
+    const { port, lastUpdateMetric, debug, customLabels } = this.config;
 
     await this.connectToGateway();
 
@@ -98,11 +98,14 @@ export class PrometheusBridge extends Adapter {
 
       for (const [deviceId, { title, lastUpdate, properties }] of Object.entries(this.entries)) {
         const labels = { ...customLabelsObject, deviceId, deviceTitle: title };
-        const diff = (new Date().getTime() - lastUpdate.getTime()) / 1000;
-        // eslint-disable-next-line max-len
-        response += '# HELP last_device_update Time since the last update of the device\n';
-        response += '# TYPE last_device_update gauge\n';
-        response += `${this.prometheusFormat('last_device_update', diff, labels)}\n`;
+
+        if (lastUpdateMetric) {
+          const diff = (new Date().getTime() - lastUpdate.getTime()) / 1000;
+          // eslint-disable-next-line max-len
+          response += '# HELP last_device_update Time since the last update of the device\n';
+          response += '# TYPE last_device_update gauge\n';
+          response += `${this.prometheusFormat('last_device_update', diff, labels)}\n`;
+        }
 
         for (const [property, { value, type, lastUpdate }] of Object.entries(properties)) {
           const additionalLabels: Record<string, string> = {};
@@ -119,13 +122,15 @@ export class PrometheusBridge extends Adapter {
             ...additionalLabels,
           })}\n`;
 
-          const diff = (new Date().getTime() - lastUpdate.getTime()) / 1000;
-          response += '# HELP last_property_update Time since the last update of the property\n';
-          response += '# TYPE last_property_update gauge\n';
-          response += `${this.prometheusFormat('last_property_update', diff, {
-            ...labels,
-            property,
-          })}\n`;
+          if (lastUpdateMetric) {
+            const diff = (new Date().getTime() - lastUpdate.getTime()) / 1000;
+            response += '# HELP last_property_update Time since the last update of the property\n';
+            response += '# TYPE last_property_update gauge\n';
+            response += `${this.prometheusFormat('last_property_update', diff, {
+              ...labels,
+              property,
+            })}\n`;
+          }
         }
       }
 

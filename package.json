@@ -1,7 +1,7 @@
 {
   "name": "prometheus-bridge",
   "display_name": "Prometheus",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Expose your devices to a prometheus server",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
